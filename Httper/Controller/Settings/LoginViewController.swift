@@ -7,8 +7,6 @@
 //
 
 import UIKit
-import FacebookLogin
-import FBSDKLoginKit
 import NVActivityIndicatorView
 
 class LoginViewController: EditingViewController, NVActivityIndicatorViewable {
@@ -62,41 +60,7 @@ class LoginViewController: EditingViewController, NVActivityIndicatorViewable {
                 self.sync.syncAll()
     
                 self.dismiss(animated: true, completion: nil)
-            } else {
-                self.showAlert(title: R.string.localizable.tip_name(), content: tip!)
             }
         }
     }
-    
-    @IBAction func loginWithFacebook(_ sender: Any) {
-        let loginManager = LoginManager()
-        loginManager.logIn(permissions: [.publicProfile], viewController: self) { loginResult in
-            switch loginResult {
-            case .failed(let error):
-                if DEBUG {
-                    print("Facebook OAuth login error: \(error)");
-                }
-            case .cancelled:
-                if DEBUG {
-                    print("User cancelled login.");
-                }
-            case .success(_, _, let accessToken):
-                self.startAnimating()
-                
-                self.user.loginWithFacebook(accessToken.tokenString) { [weak self] (success, tip) in
-                    guard let `self` = self else { return }
-                    self.stopAnimating()
-                    if success {
-                        // Sync project and request entities from server
-                        self.sync.syncAll()
-                        
-                        self.dismiss(animated: true, completion: nil)
-                    } else {
-                        self.showAlert(title: R.string.localizable.tip_name(), content: tip!)
-                    }
-                }
-            }
-        }
-    }
-    
 }

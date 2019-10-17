@@ -21,8 +21,6 @@ class ProfileTableViewController: UITableViewController {
         super.viewDidLoad()
         if user.type == UserTypeEmail {
             emailLabel.text = user.email
-        } else {
-            emailLabel.text = R.string.localizable.sign_in_facebook()
         }
     }
     
