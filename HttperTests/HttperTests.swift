@@ -7,7 +7,7 @@
 //
 
 import XCTest
-@testable import Httper
+//@testable import Httper
 
 class HttperTests: XCTestCase {
     

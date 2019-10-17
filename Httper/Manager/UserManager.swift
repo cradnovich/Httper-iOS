@@ -11,7 +11,6 @@ import Alamofire
 import SwiftyUserDefaults
 
 let UserTypeEmail = "email"
-let UserTypeFacebook = "facebook"
 
 final class UserManager {
     
@@ -185,44 +184,6 @@ final class UserManager {
                     }
                 }
         }
-    }
-    
-    func loginWithFacebook(_ token: String, completion: ((Bool, String?) -> Void)?) {
-        let params: Parameters = [
-            "accessToken": token,
-            "deviceIdentifier": UIDevice.current.identifierForVendor!.uuidString,
-            "deviceToken": Defaults[.deviceToken] == nil ? "" : Defaults[.deviceToken]!,
-            "os": "\(UIDevice.current.systemName) \(UIDevice.current.systemVersion)",
-            "lan": NSLocale.preferredLanguages[0]
-        ]
-        
-        Alamofire.request(createUrl("/api/user/fblogin"),
-                          method: .post,
-                          parameters: params,
-                          encoding: URLEncoding.default,
-                          headers: nil)
-        .responseJSON(completionHandler: { (responseObject) in
-            let response = InternetResponse(responseObject)
-            if response.statusOK() {
-                let result = response.getResult()
-                let user = result["user"]
-                // Login success, save user information to NSUserDefaults.
-                self.token = result["token"].stringValue
-                self.name = user["name"].stringValue
-                self.avatar = user["avatar"].stringValue
-                self.type = UserTypeFacebook
-                self.login = true
-                
-                completion?(true, nil)
-            } else {
-                switch response.errorCode() {
-                case .accessTokenInvalid:
-                    completion?(false, R.string.localizable.facebook_oauth_error())
-                default:
-                    completion?(false, R.string.localizable.error_unknown())
-                }
-            }
-        })
     }
     
     func reset(_ email: String, completion: ((Bool, String?) -> Void)?) {

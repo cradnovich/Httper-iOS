@@ -7,8 +7,6 @@
 //
 
 import UIKit
-import FBSDKCoreKit
-import Firebase
 import RxSwift
 import RxCocoa
 import RxFlow
@@ -23,15 +21,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
         appUpdate()
-        FirebaseApp.configure()
         
         // Pull updated requests and push local requests(if exist) when user login.
         if UserManager.shared.login {
             SyncManager.shared.syncAll()
             UserManager.shared.pullUser()
         }
-        
-        FBSDKCoreKit.ApplicationDelegate.shared.application(application, didFinishLaunchingWithOptions: launchOptions)
         
         // Listen for Coordinator mechanism is not mandatory
         coordinator.rx.didNavigate.subscribe(onNext: {
@@ -54,9 +49,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         DaoManager.shared.saveContext()
     }
 
-    func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any]) -> Bool {
-        return FBSDKCoreKit.ApplicationDelegate.shared.application(application, open: url, options: options)
-    }
+//    func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any]) -> Bool {
+//        return FBSDKCoreKit.ApplicationDelegate.shared.application(application, open: url, options: options)
+//    }
     
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
         return .portrait;

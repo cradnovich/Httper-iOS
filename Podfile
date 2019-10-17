@@ -1,16 +1,10 @@
 use_frameworks!
-platform :ios, '10.0'
+platform :ios, '13.0'
 
 target 'Httper' do
     pod 'Alamofire'
-    pod 'Crashlytics'
     pod 'ESPullToRefresh'
     pod 'Eureka'
-    pod 'Fabric'
-    pod 'FacebookCore'
-    pod 'FacebookLogin'
-    pod 'Firebase/Core'
-    pod 'Firebase/Performance'
     pod 'Kanna'
     pod 'Kingfisher'
     pod 'M80AttributedLabel'
