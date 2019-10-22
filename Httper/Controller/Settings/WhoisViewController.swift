@@ -6,6 +6,8 @@
 //  Copyright © 2016 MuShare Group. All rights reserved.
 //
 
+import WebKit
+
 fileprivate struct Const {
     
     struct icon {
@@ -65,15 +67,15 @@ class WhoisViewController: BaseViewController<WhoisViewModel> {
         return view
     }()
     
-    private lazy var resultWebView: UIWebView = {
-        let webView = UIWebView()
+    private lazy var resultWebView: WKWebView = {
+        let webView = WKWebView()
         webView.isOpaque = false
         webView.backgroundColor = .clear
         return webView
     }()
     
     private lazy var loadingActivityIndicatorView: UIActivityIndicatorView = {
-        let activityIndicatorView = UIActivityIndicatorView(style: .whiteLarge)
+        let activityIndicatorView = UIActivityIndicatorView(style: .large)
         activityIndicatorView.hidesWhenStopped = true
         return activityIndicatorView
     }()

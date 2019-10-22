@@ -8,8 +8,9 @@
 
 import RxCocoa
 import RxSwift
+import WebKit
 
-extension Reactive where Base: UIWebView {
+extension Reactive where Base: WKWebView {
     
     var html: Binder<String> {
         return Binder(base) { webView, html in

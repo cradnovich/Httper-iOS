@@ -7,11 +7,12 @@
 //
 
 import UIKit
+import WebKit
 import RxSwift
 
 class PreviewViewController: BaseViewController<PreviewViewModel> {
 
-    private lazy var previewWebView = UIWebView()
+    private lazy var previewWebView = WKWebView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
