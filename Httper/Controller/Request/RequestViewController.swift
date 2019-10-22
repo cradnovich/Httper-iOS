@@ -103,6 +103,9 @@ class RequestViewController: BaseViewController<RequestViewModel>, RxKeyboardVie
         ])
         textField.textColor = .white
         textField.setupKeyboardAccessory(UserManager.shared.characters ?? [], barStyle: .black)
+        textField.keyboardType = .URL
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
         return textField
     }()
     

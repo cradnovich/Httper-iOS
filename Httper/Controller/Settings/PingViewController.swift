@@ -53,6 +53,9 @@ class PingViewController: BaseViewController<PingViewModel> {
         textField.attributedPlaceholder = NSAttributedString(string: "Domain Name", attributes: [
             .foregroundColor: UIColor.lightGray
         ])
+        textField.keyboardType = .URL
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
         textField.becomeFirstResponder()
         textField.rx.shouldReturn.bind { [unowned self] in
             textField.resignFirstResponder()
