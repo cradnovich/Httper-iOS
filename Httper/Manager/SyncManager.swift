@@ -30,7 +30,7 @@ final class SyncManager {
             self.pushLocalRequests(nil)
         }
     }
-
+    
     func pullUpdatedRequests(_ completionHandler: ((Int) -> Void)?) {
         let localRevision = requestRevision()
         let params: Parameters = [
@@ -41,48 +41,48 @@ final class SyncManager {
                           parameters: params,
                           encoding: URLEncoding.default,
                           headers: tokenHeader())
-        .responseJSON { (responseObject) in
-            let response = InternetResponse(responseObject)
-            if response.statusOK() {
-                let result = response.getResult()
-                let revision = result["revision"].intValue
-                if revision <= localRevision {
+            .responseJSON { (responseObject) in
+                let response = InternetResponse(responseObject)
+                if response.statusOK() {
+                    let result = response.getResult()
+                    let revision = result["revision"].intValue
+                    if revision <= localRevision {
+                        completionHandler?(revision)
+                        return
+                    }
+                    
+                    let updatedRequests = result["updated"].arrayValue
+                    // Save updated requests to persistent store.
+                    for requestObject in updatedRequests {
+                        // Check pid, if pid is not nil, try to find a project and add this request to the project.
+                        let pid = requestObject["pid"].string
+                        if pid == nil {
+                            continue
+                        }
+                        let project = self.dao.projectDao.getByPid(pid!)
+                        if (project == nil) {
+                            continue
+                        }
+                        // Add this request to project.
+                        _ = self.dao.requestDao.syncUpdated(requestObject, project: project!)
+                    }
+                    
+                    // Delete requests in deleted id list.
+                    var deletedRids: [String] = []
+                    for object in result["deleted"].arrayValue {
+                        deletedRids.append(object.stringValue)
+                    }
+                    for request in self.dao.requestDao.findInRids(deletedRids) {
+                        self.dao.requestDao.delete(request)
+                    }
+                    
+                    // Update local request revision
+                    updateRequestRevision(revision)
+                    // Completion hander
                     completionHandler?(revision)
-                    return
+                } else {
+                    completionHandler?(-1)
                 }
-                
-                let updatedRequests = result["updated"].arrayValue
-                // Save updated requests to persistent store.
-                for requestObject in updatedRequests {
-                    // Check pid, if pid is not nil, try to find a project and add this request to the project.
-                    let pid = requestObject["pid"].string
-                    if pid == nil {
-                        continue
-                    }
-                    let project = self.dao.projectDao.getByPid(pid!)
-                    if (project == nil) {
-                        continue
-                    }
-                    // Add this request to project.
-                    _ = self.dao.requestDao.syncUpdated(requestObject, project: project!)
-                }
-                
-                // Delete requests in deleted id list.
-                var deletedRids: [String] = []
-                for object in result["deleted"].arrayValue {
-                    deletedRids.append(object.stringValue)
-                }
-                for request in self.dao.requestDao.findInRids(deletedRids) {
-                    self.dao.requestDao.delete(request)
-                }
-                
-                // Update local request revision
-                updateRequestRevision(revision)
-                // Completion hander
-                completionHandler?(revision)
-            } else {
-                completionHandler?(-1)
-            }
         }
     }
     
@@ -96,65 +96,65 @@ final class SyncManager {
             var headers: HTTPHeaders? = nil, parameters: Parameters? = nil
             var body = ""
             if request.headers != nil {
-                headers = NSKeyedUnarchiver.unarchiveObject(with: request.headers! as Data) as? HTTPHeaders
-            }
-            if request.parameters != nil {
-                parameters = NSKeyedUnarchiver.unarchiveObject(with: request.parameters! as Data) as? Parameters
-            }
-            if request.body != nil {
-                body = String(data: request.body! as Data, encoding: .utf8)!
-            }
-  
-            // Add request object to request array.
-            requestArray.append([
-                "url": request.url!,
-                "method": request.method!,
-                "updateAt": request.update,
-                "headers": JSONStringWithObject(headers!)!,
-                "parameters": JSONStringWithObject(parameters!)!,
-                "bodyType": request.bodytype!,
-                "body": body,
-                // If rid is not nil, that means this request entity has been synced with server before.
-                // This time, we are going to update this request entity, rather than create a new one.
-                "rid": request.rid ?? "",
-                // If pid is not nil, that menas this request has been added to a project.
-                "pid": request.project?.pid ?? ""
-            ])
-        }
-        let params: Parameters = [
-            "requestsJSONArray": JSONStringWithObject(requestArray)!
-        ]
-        Alamofire.request(
-            createUrl("api/request/push"),
-            method: .post,
-            parameters: params,
-            encoding: URLEncoding.default,
-            headers: tokenHeader()
-        ).responseJSON {
-            let response = InternetResponse($0)
-            if response.statusOK() {
-                let dataResult = response.getResult()
-                let results = dataResult["results"]
-                for i in 0 ..< requests.count {
-                    let result = results[i]
-                    let request = requests[i]
-                    request.rid = result["rid"].stringValue
-                    request.revision = result["revision"].int16Value
+                //                headers = NSKeyedUnarchiver.unarchiveObject(with: request.headers! as Data) as? HTTPHeaders
+                headers = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(request.headers! as Data) as? HTTPHeaders
+                if request.parameters != nil {
+                    parameters = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(request.parameters! as Data) as? Parameters
                 }
-                self.dao.saveContext()
+                if request.body != nil {
+                    body = String(data: request.body! as Data, encoding: .utf8)!
+                }
                 
-                let revision = dataResult["revision"].intValue
-                // Update local request revision
-                updateRequestRevision(revision)
-                // Completion
-                completionHandler?(revision)
-            } else {
-                // If push failed, completion with -1.
-                completionHandler?(-1)
+                // Add request object to request array.
+                requestArray.append([
+                    "url": request.url!,
+                    "method": request.method!,
+                    "updateAt": request.update,
+                    "headers": JSONStringWithObject(headers!)!,
+                    "parameters": JSONStringWithObject(parameters!)!,
+                    "bodyType": request.bodytype!,
+                    "body": body,
+                    // If rid is not nil, that means this request entity has been synced with server before.
+                    // This time, we are going to update this request entity, rather than create a new one.
+                    "rid": request.rid ?? "",
+                    // If pid is not nil, that menas this request has been added to a project.
+                    "pid": request.project?.pid ?? ""
+                ])
+            }
+            let params: Parameters = [
+                "requestsJSONArray": JSONStringWithObject(requestArray)!
+            ]
+            Alamofire.request(
+                createUrl("api/request/push"),
+                method: .post,
+                parameters: params,
+                encoding: URLEncoding.default,
+                headers: tokenHeader()
+            ).responseJSON {
+                let response = InternetResponse($0)
+                if response.statusOK() {
+                    let dataResult = response.getResult()
+                    let results = dataResult["results"]
+                    for i in 0 ..< requests.count {
+                        let result = results[i]
+                        let request = requests[i]
+                        request.rid = result["rid"].stringValue
+                        request.revision = result["revision"].int16Value
+                    }
+                    self.dao.saveContext()
+                    
+                    let revision = dataResult["revision"].intValue
+                    // Update local request revision
+                    updateRequestRevision(revision)
+                    // Completion
+                    completionHandler?(revision)
+                } else {
+                    // If push failed, completion with -1.
+                    completionHandler?(-1)
+                }
             }
         }
     }
-    
     // Delete a request in persistent store and server.
     func deleteRequest(_ request: Request, completion: ((Int) -> Void)? = nil) {
         // If rid is nil or token is nil, that means this request cannot sync with server
@@ -198,7 +198,7 @@ final class SyncManager {
                 completion?(-1)
             }
         }
-
+        
     }
     
     // Pull projects from server.
@@ -246,7 +246,7 @@ final class SyncManager {
             }
         }
     }
-
+    
     // Push local projects to server.
     // Return newest revision in completionHandler
     func pushLocalProjects(_ completion: ((Int) -> Void)?) {
@@ -348,6 +348,4 @@ final class SyncManager {
             }
         }
     }
-
-    
 }

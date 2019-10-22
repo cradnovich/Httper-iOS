@@ -11,8 +11,8 @@ import NVActivityIndicatorView
 
 class NameViewController: UIViewController, UITextFieldDelegate, NVActivityIndicatorViewable {
 
-    @IBOutlet weak var nameTextField: UITextField!
-    @IBOutlet weak var saveBarButtonItem: UIBarButtonItem!
+    @IBOutlet var nameTextField: UITextField!
+    @IBOutlet var saveBarButtonItem: UIBarButtonItem!
 
     let user = UserManager.shared
     
@@ -34,7 +34,7 @@ class NameViewController: UIViewController, UITextFieldDelegate, NVActivityIndic
     }
     
     // MARK: - Action
-    @IBAction func save(_ sender: Any) {
+    @IBAction func save(_ sender: UIBarButtonItem) {
         if nameTextField.text == "" {
             showAlert(title: R.string.localizable.tip_name(),
                       content: R.string.localizable.name_not_empty())
